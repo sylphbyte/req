@@ -8,6 +8,10 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/sylphbyte/pr"
+	// 如有 pr 包可用，取消注释下一行
+	// "github.com/sylphbyte/pr"
 )
 
 const (
@@ -59,6 +63,14 @@ func NewRequest(method MethodType, contentType ContentType, url string, params m
 	return &Request{Method: method, ContentType: contentType, Url: url, Params: params, Header: header, Timeout: timeout}
 }
 
+// ShowRequestLog 控制是否显示详细请求日志
+var ShowRequestLog = false
+
+// SetShowRequestLog 设置请求日志显示开关
+func SetShowRequestLog(show bool) {
+	ShowRequestLog = show
+}
+
 func DoRequest(req *Request) (*http.Response, error) {
 	return do(req.Method, req.ContentType, req.Url, req.Params, req.Header, req.Timeout)
 }
@@ -104,6 +116,16 @@ func Json(url string, params map[string]interface{}, header http.Header, duratio
 }
 
 func do(method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (resp *http.Response, err error) {
+	if ShowRequestLog {
+		fmt.Println()
+		pr.Cyan(">>>remote: request info %s\n", strings.Repeat("==", 50))
+		pr.Cyan(">>>remote: method: %s\n", method)
+		pr.Cyan(">>>remote: url: %s\n", url)
+		pr.Cyan(">>>remote: params: %+v\n", params)
+		pr.Cyan(">>>remote: header: %+v\n", header)
+	}
+	timeStart := time.Now()
+
 	req, err := makeRequest(method, contentType, url, params)
 	if err != nil {
 		return
@@ -114,7 +136,31 @@ func do(method MethodType, contentType ContentType, url string, params map[strin
 		Timeout: duration,
 	}
 
-	return client.Do(req)
+	resp, err = client.Do(req)
+
+	useTime := time.Since(timeStart).Milliseconds()
+
+	if ShowRequestLog {
+		var code int
+		var bodyString string
+		if resp != nil {
+			code = resp.StatusCode
+			bs, _ := io.ReadAll(resp.Body)
+			bodyString = string(bs)
+			resp.Body = io.NopCloser(bytes.NewReader(bs))
+		}
+		pr.Cyan(">>>remote: got code: %d\n", code)
+		pr.Cyan(">>>remote: got body: %s\n", bodyString)
+		if useTime > 1000 {
+			pr.Red(">>>remote: use time: %dms\n", useTime)
+		} else {
+			pr.Green(">>>remote: use time: %dms\n", useTime)
+		}
+		pr.Cyan(">>>remote: ended %s\n", strings.Repeat("==", 50))
+		fmt.Println()
+	}
+
+	return
 }
 
 func makeRequest(method MethodType, typ ContentType, url string, params map[string]interface{}) (*http.Request, error) {
