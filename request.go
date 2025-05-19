@@ -71,20 +71,20 @@ func SetShowRequestLog(show bool) {
 	ShowRequestLog = show
 }
 
-func DoRequest(req *Request) (*http.Response, error) {
-	return do(req.Method, req.ContentType, req.Url, req.Params, req.Header, req.Timeout)
+func DoRequest(name any, req *Request) (*http.Response, error) {
+	return do(name, req.Method, req.ContentType, req.Url, req.Params, req.Header, req.Timeout)
 }
 
-func Auto(method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
+func Auto(name any, method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
 	if method == GetMethod {
 		return Get(url, params)
 	}
 
 	if contentType == FormType {
-		return Form(url, params, header, duration)
+		return Form(name, url, params, header, duration)
 	}
 
-	return Json(url, params, header, duration)
+	return Json(name, url, params, header, duration)
 }
 
 func Get(url string, params map[string]interface{}) (*http.Response, error) {
@@ -98,27 +98,28 @@ func getRequestURL(url string, params map[string]interface{}) string {
 	return fmt.Sprintf("%s?%s", url, queryString)
 }
 
-func Form(url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
+func Form(name any, url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
 	if header == nil {
 		header = http.Header{}
 	}
 	header.Set("Content-Type", string(FormType))
-	return do(PostMethod, FormType, url, params, header, duration)
+	return do(name, PostMethod, FormType, url, params, header, duration)
 }
 
-func Json(url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
+func Json(name any, url string, params map[string]interface{}, header http.Header, duration time.Duration) (*http.Response, error) {
 	if header == nil {
 		header = http.Header{}
 	}
 
 	header.Set("Content-Type", "application/json;charset=utf-8")
-	return do(PostMethod, JsonType, url, params, header, duration)
+	return do(name, PostMethod, JsonType, url, params, header, duration)
 }
 
-func do(method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (resp *http.Response, err error) {
+func do(name any, method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (resp *http.Response, err error) {
 	if ShowRequestLog {
 		fmt.Println()
 		pr.Cyan(">>>remote: request info %s\n", strings.Repeat("==", 50))
+		pr.Cyan(">>>remote: name: %v\n", name)
 		pr.Cyan(">>>remote: method: %s\n", method)
 		pr.Cyan(">>>remote: url: %s\n", url)
 		pr.Cyan(">>>remote: params: %+v\n", params)
@@ -205,9 +206,9 @@ func queryParams(params map[string]interface{}, format string) string {
 	return ret
 }
 
-func PostForm(url string, data map[string]interface{}, header http.Header, requestTimeout time.Duration) (ret *Response, err error) {
+func PostForm(name any, url string, data map[string]interface{}, header http.Header, requestTimeout time.Duration) (ret *Response, err error) {
 	var resp *http.Response
-	if resp, err = Form(url, data, header, requestTimeout); err != nil {
+	if resp, err = Form(name, url, data, header, requestTimeout); err != nil {
 		return
 	}
 
@@ -215,9 +216,9 @@ func PostForm(url string, data map[string]interface{}, header http.Header, reque
 	return takeResponse(resp)
 }
 
-func PostJson(url string, params map[string]interface{}, header http.Header, duration time.Duration) (ret *Response, err error) {
+func PostJson(name any, url string, params map[string]interface{}, header http.Header, duration time.Duration) (ret *Response, err error) {
 	var resp *http.Response
-	if resp, err = Json(url, params, header, duration); err != nil {
+	if resp, err = Json(name, url, params, header, duration); err != nil {
 		return
 	}
 
