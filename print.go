@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	enabled      bool
-	filter       = C.New(C.BgYellow, C.Bold)
+	enabled bool
+	// filter       = C.New(C.BgYellow, C.Bold)
 	forceDisable bool
 )
 
