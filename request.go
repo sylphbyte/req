@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/sylphbyte/pr"
 	// 如有 pr 包可用，取消注释下一行
 	// "github.com/sylphbyte/pr"
 )
@@ -118,12 +116,12 @@ func Json(name any, url string, params map[string]interface{}, header http.Heade
 func do(name any, method MethodType, contentType ContentType, url string, params map[string]interface{}, header http.Header, duration time.Duration) (resp *http.Response, err error) {
 	if ShowRequestLog {
 		fmt.Println()
-		pr.Cyan(">>>remote: request info %s\n", strings.Repeat("==", 50))
-		pr.Cyan(">>>remote: name: %v\n", name)
-		pr.Cyan(">>>remote: method: %s\n", method)
-		pr.Cyan(">>>remote: url: %s\n", url)
-		pr.Cyan(">>>remote: params: %+v\n", params)
-		pr.Cyan(">>>remote: header: %+v\n", header)
+		printCyan(">>>remote: request info %s\n", strings.Repeat("==", 50))
+		printCyan(">>>remote: name: %v\n", name)
+		printCyan(">>>remote: method: %s\n", method)
+		printCyan(">>>remote: url: %s\n", url)
+		printCyan(">>>remote: params: %+v\n", params)
+		printCyan(">>>remote: header: %+v\n", header)
 	}
 	timeStart := time.Now()
 
@@ -150,14 +148,14 @@ func do(name any, method MethodType, contentType ContentType, url string, params
 			bodyString = string(bs)
 			resp.Body = io.NopCloser(bytes.NewReader(bs))
 		}
-		pr.Cyan(">>>remote: got code: %d\n", code)
-		pr.Cyan(">>>remote: got body: %s\n", bodyString)
+		printCyan(">>>remote: got code: %d\n", code)
+		printCyan(">>>remote: got body: %s\n", bodyString)
 		if useTime > 1000 {
-			pr.Red(">>>remote: use time: %dms\n", useTime)
+			printRed(">>>remote: use time: %dms\n", useTime)
 		} else {
-			pr.Green(">>>remote: use time: %dms\n", useTime)
+			printGreen(">>>remote: use time: %dms\n", useTime)
 		}
-		pr.Cyan(">>>remote: ended %s\n", strings.Repeat("==", 50))
+		printCyan(">>>remote: ended %s\n", strings.Repeat("==", 50))
 		fmt.Println()
 	}
 
